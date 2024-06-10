@@ -39,6 +39,8 @@
                 >
                     {{ transaction.type === 'income' ? '수입' : '지출' }}:
                     {{ transaction.amount }}
+                    <button @click="editTransaction(index)">편집</button>
+                    <button @click="deleteTransaction(index)">삭제</button>
                 </li>
             </ul>
         </div>
@@ -74,6 +76,7 @@ export default {
             selectedDate: null,
             amount: 0,
             type: 'income',
+            editIndex: -1,
         };
     },
     computed: {
@@ -122,14 +125,35 @@ export default {
         },
         addTransaction() {
             if (this.selectedDate) {
-                if (!this.transactions[this.selectedDate]) {
-                    this.transactions[this.selectedDate] = [];
+                if (this.editIndex >= 0) {
+                    this.transactions[this.selectedDate][this.editIndex] = {
+                        amount: this.amount,
+                        type: this.type,
+                    };
+                    this.editIndex = -1; // 편집 모드 해제
+                } else {
+                    if (!this.transactions[this.selectedDate]) {
+                        this.transactions[this.selectedDate] = [];
+                    }
+                    this.transactions[this.selectedDate].push({
+                        amount: this.amount,
+                        type: this.type,
+                    });
                 }
-                this.transactions[this.selectedDate].push({
-                    amount: this.amount,
-                    type: this.type,
-                });
                 this.amount = 0; // 입력 필드 초기화
+                this.type = 'income';
+            }
+        },
+        editTransaction(index) {
+            const transaction = this.transactionsByDate[index];
+            this.amount = transaction.amount;
+            this.type = transaction.type;
+            this.editIndex = index; // 편집할 인덱스 설정
+        },
+        deleteTransaction(index) {
+            this.transactions[this.selectedDate].splice(index, 1);
+            if (this.transactions[this.selectedDate].length === 0) {
+                delete this.transactions[this.selectedDate];
             }
         },
         calculateTotal(transactions, type) {
